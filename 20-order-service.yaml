@@ -1,0 +1,99 @@
+# ======================================================================
+# order-service: gestion de ordenes (PostgreSQL db 'orders').
+# Imagen local: order-service:jvm  (cargar en Kind con `kind load docker-image`).
+# ======================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: order-service
+    app.kubernetes.io/part-of: apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: order-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: order-service
+        app.kubernetes.io/part-of: apps
+      # Visibilidad L7 (HTTP) en Hubble: ya NO se usa la anotacion
+      # policy.cilium.io/proxy-visibility (removida en Cilium 1.16+, inerte en
+      # 1.18). Ahora se logra con la regla `rules.http: [{}]` en el ingress de
+      # k8s/cilium-network-policies/20-order-service-policy.yaml.
+    spec:
+      containers:
+        - name: order-service
+          image: order-service:jvm
+          imagePullPolicy: IfNotPresent # imagen cargada localmente en Kind
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_URL
+              value: jdbc:postgresql://postgres.databases.svc.cluster.local:5432/orders
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials-apps
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials-apps
+                  key: POSTGRES_PASSWORD
+            # URL de tracking-service usada en el endpoint de demo CNP
+            # (GET /orders/{id}/tracking-status). Bloqueada por la
+            # CiliumNetworkPolicy order-service-zero-trust.
+            - name: TRACKING_SERVICE_URL
+              value: http://tracking-service.apps.svc.cluster.local:8081
+            # Fault injection de latencia en BD (escenario 3 de demo).
+            # Activa el FaultInjectionOrderRepositoryDecorator sin rebuild.
+            - name: FAULT_DB_LATENCY_ENABLED
+              value: "false"
+            - name: FAULT_DB_LATENCY_DELAY_MS
+              value: "0"
+            - name: FAULT_DB_LATENCY_JITTER_MS
+              value: "0"
+          #envFrom:
+            #- configMapRef:
+                #name: otel-endpoint # OTEL_EXPORTER_OTLP_ENDPOINT
+          startupProbe:
+            httpGet:
+              path: /q/health/started
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: order-service
+spec:
+  selector:
+    app.kubernetes.io/name: order-service
+  ports:
+    - port: 8080
+      targetPort: 8080

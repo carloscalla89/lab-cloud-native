@@ -1,0 +1,8 @@
+# Namespace de los microservicios de la aplicacion.
+# El OpenTelemetry Collector vive en el namespace 'otel' (ver otel/deploy-otel-collector.sh).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apps
+  labels:
+    app.kubernetes.io/part-of: apps

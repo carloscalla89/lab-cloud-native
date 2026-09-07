@@ -1,0 +1,96 @@
+# ======================================================================
+# tracking-service: geocodificacion inversa + eventos (PostgreSQL db 'tracking').
+# Proveedor de geocodificacion por defecto: nominatim (no requiere API key;
+# realiza llamadas salientes a nominatim.openstreetmap.org).
+# Imagen local: tracking-service:jvm
+# ======================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tracking-service
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: tracking-service
+    app.kubernetes.io/part-of: apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tracking-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: tracking-service
+        app.kubernetes.io/part-of: apps
+      # Visibilidad L7 (HTTP) en Hubble: ya NO se usa la anotacion
+      # policy.cilium.io/proxy-visibility (removida en Cilium 1.16+, inerte en
+      # 1.18). Ahora se logra con la regla `rules.http: [{}]` en el ingress de
+      # k8s/cilium-network-policies/30-tracking-service-policy.yaml.
+    spec:
+      containers:
+        - name: tracking-service
+          image: tracking-service:jvm
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          env:
+            - name: DB_URL
+              value: jdbc:postgresql://postgres.databases.svc.cluster.local:5432/tracking
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials-apps
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-credentials-apps
+                  key: POSTGRES_PASSWORD
+            - name: GEOCODING_PROVIDER
+              value: nominatim
+            - name: FAULT_LATENCY_ENABLED
+              value: "false"
+            - name: FAULT_LATENCY_DELAY_MS
+              value: "0"
+            - name: FAULT_LATENCY_JITTER_MS
+              value: "0"
+          #envFrom:
+            #- configMapRef:
+                #name: otel-endpoint
+          startupProbe:
+            httpGet:
+              path: /q/health/started
+              port: 8081
+            failureThreshold: 30
+            periodSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8081
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8081
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tracking-service
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: tracking-service
+spec:
+  selector:
+    app.kubernetes.io/name: tracking-service
+  ports:
+    - port: 8081
+      targetPort: 8081
