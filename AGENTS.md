@@ -13,8 +13,8 @@ the cross-cutting gotchas.
   - `quarkus-apps/order-service/` — orders + PostgreSQL, HTTP 8080
   - `quarkus-apps/tracking-service/` — reverse-geocoding ACL + PostgreSQL, 8081
   - `quarkus-apps/experience-order-tracker-service/` — BFF/orchestrator, no DB, 8082
-- All three now use base package `com.labcloudnative.*` and groupId
-  `com.labcloudnative` (the earlier `com.kcd`/`com.demoq` dir mismatch is gone).
+- All three use base package `com.labcloudnative.*` and groupId
+  `com.labcloudnative`; earlier mismatched directory names are gone.
 - Poms still diverge: Quarkus BOM `3.33.2.1` for order vs `3.33.1` for
   tracking/experience; `quarkus-junit-mockito` and Lombok exist **only** in
   order-service (others use `quarkus-junit5`).
@@ -41,8 +41,10 @@ Apply per folder:
   Deployments.** `kubectl apply -k k8s-sa/`
 - `k8s-apps/<service>/` → Deployment + Service + its own kustomization.
   `kubectl apply -k k8s-apps/<service>/`
-- `istio/` → gateway, virtual-services, peer-authentication, authorization-policies.
-  `kubectl apply -k istio/`
+- `istio/base/` → Gateway API `Gateway` + `HTTPRoute`, peer-authentication and
+  authorization-policies. `kubectl apply -k istio/base/` (or the per-env overlay
+  `istio/overlays/kind/`). Requires the Gateway API CRDs (standard channel).
+  `kubectl apply -k istio/` no longer exists.
 
 Order: `00-namespace` → `k8s-db` → `k8s-sa` → `k8s-apps/<service>` → `istio`.
 Images are `<service>:jvm` with `imagePullPolicy: IfNotPresent`; load into kind
@@ -55,11 +57,24 @@ with `kind load docker-image <image> --name k8s-demos-cluster`.
 - `istioctl` is global at `D:\programas\istio\istio-1.31.1\bin` (user PATH). An
   already-open shell may still resolve 1.22; fix with
   `export PATH="/d/programas/istio/istio-1.31.1/bin:$PATH"`.
-- `PeerAuthentication/default` is **STRICT** in `apps`; `istio/authorization-policies.yaml`
+- `PeerAuthentication/default` is **STRICT** in `apps`; `istio/base/authorization-policies.yaml`
   allows experience only from the ingress-gateway SA, and order/tracking only
   from the experience SA (plus `/q/health/*` for probes).
-- The gateway exposes **only `/experience`** (BFF is the single entry point).
-  Test via `kubectl -n istio-system port-forward svc/istio-ingressgateway 8080:80`.
+- Ingress uses the **Kubernetes Gateway API** (the Istio `Gateway`/`VirtualService`
+  APIs are no longer used): the standard-channel CRDs must be installed,
+  `GatewayClass/istio` is created by istiod, the `Gateway` lives in namespace
+  `istio-ingress` (no sidecar injection) and Istio auto-provisions its
+  `Deployment`/`Service` as `apps-gateway-istio`. The `HTTPRoute` lives in `apps`
+  and exposes **only `/experience`** (BFF is the single entry point).
+- The ingress-gateway ServiceAccount is
+  `cluster.local/ns/istio-ingress/sa/apps-gateway-istio` (used by
+  `experience-allow-gateway`); update it if the generated name ever changes.
+- Test via `kubectl -n istio-ingress port-forward svc/apps-gateway-istio 8080:80`.
+  On kind the Service is `LoadBalancer` with `EXTERNAL-IP <pending>` and the
+  Gateway reports `Programmed=False` (`AddressNotAssigned`); this is expected and
+  port-forward still works.
+- Env-specific bits live in `istio/overlays/<env>/` (`kind`, `gcp`). The GKE/CSM
+  overlay only patches `gatewayClassName` (e.g. `gke-l7-global-external-managed`).
 - Gotcha: `kubectl port-forward` directly to a service **bypasses** Istio
   mTLS/authorization (localhost is exempt), so it is fine for functional tests
   but does NOT validate policies. To validate, use the gateway or a meshed pod

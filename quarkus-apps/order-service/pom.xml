@@ -76,9 +76,9 @@
             <artifactId>quarkus-hibernate-validator</artifactId>
         </dependency>
 
-        <!-- ================== Cliente REST saliente (demo CNP) ================== -->
+        <!-- ================== Cliente REST saliente (demo Istio) ================== -->
         <!-- Permite llamar a tracking-service desde order-service para demostrar
-             el bloqueo por CiliumNetworkPolicy visible en Hubble. -->
+             la denegación por Istio AuthorizationPolicy (tracking-allow-experience). -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-rest-client</artifactId>

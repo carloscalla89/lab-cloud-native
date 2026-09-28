@@ -1,0 +1,22 @@
+{
+  "name": "gdg-lima-front",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Frontend GDG Lima Meetup – Arquitectura Cloud Native con Quarkus, Kubernetes, Istio (Gateway API) y PostgreSQL",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "gateway": "kubectl -n istio-ingress port-forward svc/apps-gateway-istio 8080:80"
+  },
+  "dependencies": {
+    "axios": "^1.7.9",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.6"
+  }
+}

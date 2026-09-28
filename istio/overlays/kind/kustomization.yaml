@@ -1,0 +1,11 @@
+# Overlay para kind (entorno actual).
+# No necesita parches: la base ya usa gatewayClassName: istio y el Gateway
+# auto-aprovisionado por Istio. Existe como punto de entrada explicito por
+# entorno y para futuros ajustes especificos de kind.
+#
+# Uso:  kubectl apply -k istio/overlays/kind/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base

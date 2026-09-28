@@ -15,14 +15,14 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Endpoint de demo: demuestra que la CiliumNetworkPolicy
- * {@code order-service-zero-trust} bloquea el egress de order-service hacia
+ * Endpoint de demo: demuestra que la Istio AuthorizationPolicy
+ * {@code tracking-allow-experience} deniega la llamada de order-service hacia
  * tracking-service.
  *
  * <p>Llama directamente a tracking-service (algo que nunca deberia ocurrir en
- * produccion: el flujo real pasa por el BFF). La peticion es denegada por
- * Cilium y el flujo {@code EGRESS DENIED} queda visible en Hubble con la
- * identidad de ambos extremos y el puerto 8081.</p>
+ * produccion: el flujo real pasa por el BFF). La peticion es denegada por el
+ * sidecar de tracking-service, que solo autoriza al ServiceAccount del BFF,
+ * con la identidad de ambos extremos y el puerto 8081.</p>
  *
  * <p>Uso:
  * <pre>
@@ -46,10 +46,11 @@ public class TrackingConnectivityResource {
      * Intenta llamar a tracking-service para obtener los eventos del envio
      * asociado a la orden indicada.
      *
-     * <p>Con la CiliumNetworkPolicy activa este endpoint siempre devuelve
-     * {@code 503} porque Cilium descarta el SYN antes de que llegue al pod
-     * de tracking-service. Sin la policy, devuelve {@code 200} con los
-     * eventos reales (o una lista vacia si no hay tracking para ese shipment).</p>
+     * <p>Con la AuthorizationPolicy activa este endpoint siempre devuelve
+     * {@code 503} porque el sidecar de tracking-service rechaza la peticion
+     * (403) antes de que llegue a la aplicacion. Sin la policy, devuelve
+     * {@code 200} con los eventos reales (o una lista vacia si no hay tracking
+     * para ese shipment).</p>
      *
      * @param orderId identificador de la orden (se usa como shipmentId)
      * @return resultado de la prueba de conectividad con informacion de debug
@@ -58,12 +59,12 @@ public class TrackingConnectivityResource {
     @Path("/{orderId}/tracking-status")
     public Response checkTrackingConnectivity(@PathParam("orderId") UUID orderId) {
         String shipmentId = orderId.toString();
-        Log.warnf("[DEMO CNP] order-service intentando llamar a tracking-service " +
-                  "para el envio %s — deberia ser bloqueado por CiliumNetworkPolicy", shipmentId);
+        Log.warnf("[DEMO ISTIO] order-service intentando llamar a tracking-service " +
+                  "para el envio %s — deberia ser bloqueado por la AuthorizationPolicy", shipmentId);
         try {
             String payload = trackingClient.getEventsByShipment(shipmentId);
-            Log.warnf("[DEMO CNP] INESPERADO: la llamada tuvo exito. " +
-                      "Verificar que la politica order-service-zero-trust este aplicada.");
+            Log.warnf("[DEMO ISTIO] INESPERADO: la llamada tuvo exito. " +
+                      "Verificar que la AuthorizationPolicy tracking-allow-experience este aplicada.");
             return Response.ok(new ConnectivityResult(
                     orderId,
                     trackingServiceUrl + "/tracking-events?shipmentId=" + shipmentId,
@@ -74,13 +75,13 @@ public class TrackingConnectivityResource {
             )).build();
         } catch (Exception e) {
             String motivo = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-            Log.infof("[DEMO CNP] Llamada bloqueada como se esperaba: %s", motivo);
+            Log.infof("[DEMO ISTIO] Llamada bloqueada como se esperaba: %s", motivo);
             return Response.status(503).entity(new ConnectivityResult(
                     orderId,
                     trackingServiceUrl + "/tracking-events?shipmentId=" + shipmentId,
                     false,
                     null,
-                    "Bloqueado por CiliumNetworkPolicy 'order-service-zero-trust' " +
+                    "Bloqueado por Istio AuthorizationPolicy 'tracking-allow-experience' " +
                     "(egress de order-service hacia tracking-service denegado). " +
                     "Detalle: " + motivo,
                     Instant.now()

@@ -1,0 +1,8 @@
+# Namespace dedicado para el gateway de entrada (Gateway API).
+# Sin el label istio-injection: el pod del gateway no debe recibir sidecar.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-ingress
+  labels:
+    app.kubernetes.io/part-of: apps

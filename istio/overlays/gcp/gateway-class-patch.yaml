@@ -1,0 +1,12 @@
+# En GKE el Gateway lo implementa la clase gestionada, no Istio.
+# Ajustar al tipo de balanceador deseado:
+#   - gke-l7-global-external-managed   (externo global, L7)
+#   - gke-l7-regional-external-managed (externo regional, L7)
+#   - gke-l7-rilb                      (interno regional, L7)
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: apps-gateway
+  namespace: istio-ingress
+spec:
+  gatewayClassName: gke-l7-global-external-managed

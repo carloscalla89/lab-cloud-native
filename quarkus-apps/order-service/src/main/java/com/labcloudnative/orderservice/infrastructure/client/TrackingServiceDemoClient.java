@@ -11,11 +11,11 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 /**
  * Cliente REST hacia tracking-service usado exclusivamente para demostrar
- * el bloqueo de egress por CiliumNetworkPolicy
+ * la denegación por Istio AuthorizationPolicy (tracking-allow-experience)
  *
  * <p>Llama a {@code GET /tracking-events?shipmentId=...} con un timeout
- * corto (2 s) para que el fallo sea rapido y visible en Hubble como
- * {@code EGRESS DENIED} desde order-service hacia tracking-service.</p>
+ * corto (2 s) para que el fallo sea rapido: el sidecar de tracking-service
+ * rechaza la peticion con 403 porque solo el BFF esta autorizado.</p>
  */
 @RegisterRestClient(configKey = "tracking-service")
 @RegisterProvider(ClientRequestResponseLoggingFilter.class)

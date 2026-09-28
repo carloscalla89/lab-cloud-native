@@ -1,0 +1,23 @@
+# Gateway de entrada (Kubernetes Gateway API).
+# Istio auto-aprovisiona el Service + Deployment del gateway a partir de este
+# recurso (nombre generado: apps-gateway-istio) en el namespace istio-ingress.
+# Solo acepta rutas de HTTPRoute del namespace apps (el BFF).
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: apps-gateway
+  namespace: istio-ingress
+  labels:
+    app.kubernetes.io/part-of: apps
+spec:
+  gatewayClassName: istio
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: apps
