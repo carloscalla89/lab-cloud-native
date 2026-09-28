@@ -1,0 +1,19 @@
+# Aplica solo la base de datos con:  kubectl apply -k db/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - initdb-configmap.yaml
+  - postgres.yaml
+
+# El Secret se genera desde la fuente canonica en postgres-credentials.env.
+secretGenerator:
+  - name: postgres-credentials
+    namespace: databases
+    envs:
+      - postgres-credentials.env
+
+# Sin hash: los consumidores referencian el nombre exacto del Secret.
+generatorOptions:
+  disableNameSuffixHash: true

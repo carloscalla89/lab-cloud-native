@@ -1,0 +1,62 @@
+# Control de acceso de la malla (RBAC de Istio).
+# - experience: solo el ingress gateway puede llamarlo.
+# - order-service y tracking-service: solo el BFF (experience) puede llamarlos.
+# En todos los casos se permite /q/health/* para no romper los probes de Kubernetes.
+# Requiere que cada workload tenga su propio ServiceAccount (ver k8s-sa/).
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: experience-allow-gateway
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: experience-order-tracker-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account
+    - to:
+        - operation:
+            paths: ["/q/health/*"]
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: order-allow-experience
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: order-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/apps/sa/experience-order-tracker-service
+    - to:
+        - operation:
+            paths: ["/q/health/*"]
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: tracking-allow-experience
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tracking-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/apps/sa/experience-order-tracker-service
+    - to:
+        - operation:
+            paths: ["/q/health/*"]

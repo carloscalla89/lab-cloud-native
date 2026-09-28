@@ -1,0 +1,9 @@
+# Aplica la configuracion de Istio con:  kubectl apply -k istio/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - gateway.yaml
+  - virtual-services.yaml
+  - peer-authentication.yaml
+  - authorization-policies.yaml

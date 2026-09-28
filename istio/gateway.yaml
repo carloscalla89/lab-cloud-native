@@ -1,0 +1,17 @@
+# Gateway de entrada para los microservicios de apps.
+# Selecciona el ingress gateway instalado por Istio en istio-system.
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: apps-gateway
+  namespace: apps
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"

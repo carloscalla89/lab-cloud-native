@@ -1,0 +1,21 @@
+# Unico punto de entrada expuesto por el gateway: el BFF.
+# order-service y tracking-service ya no se exponen directamente (solo los llama el BFF).
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: microservices
+  namespace: apps
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - apps-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /experience
+      route:
+        - destination:
+            host: experience-order-tracker-service.apps.svc.cluster.local
+            port:
+              number: 8082

@@ -6,3 +6,4 @@ metadata:
   name: apps
   labels:
     app.kubernetes.io/part-of: apps
+    istio-injection: enabled

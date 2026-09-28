@@ -1,0 +1,13 @@
+# Script de inicializacion de PostgreSQL.
+# El entrypoint oficial crea la BD POSTGRES_DB (cloudnative-db); aqui se
+# agregan las bases logicas que consumen los microservicios.
+# Solo se ejecuta cuando el directorio de datos (PVC) esta vacio.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-initdb
+  namespace: databases
+data:
+  01-create-databases.sql: |
+    CREATE DATABASE orders;
+    CREATE DATABASE tracking;

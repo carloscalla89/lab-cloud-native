@@ -1,0 +1,4 @@
+# Skills locales de OpenCode (no se versionan)
+.agents/
+.idea/
+.tracking-service/

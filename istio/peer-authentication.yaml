@@ -1,0 +1,9 @@
+# mTLS estricto para todo el namespace apps.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: apps
+spec:
+  mtls:
+    mode: STRICT

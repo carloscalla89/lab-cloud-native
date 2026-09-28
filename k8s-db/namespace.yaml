@@ -1,0 +1,8 @@
+# Namespace de las bases de datos (PostgreSQL).
+# Los microservicios de la app viven en el namespace 'apps'.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: databases
+  labels:
+    app.kubernetes.io/part-of: apps
