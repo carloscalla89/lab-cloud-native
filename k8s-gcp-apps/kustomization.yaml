@@ -1,0 +1,12 @@
+# Microservicios para GCP (GKE):  kubectl apply -k k8s-gcp-apps/
+# Asume que el namespace 'apps' ya existe (lo crea k8s-gcp-db/).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - deployment-order-service.yaml
+  - service-order-service.yaml
+  - deployment-tracking-service.yaml
+  - service-tracking-service.yaml
+  - deployment-experience-order-tracker-service.yaml
+  - service-experience-order-tracker-service.yaml

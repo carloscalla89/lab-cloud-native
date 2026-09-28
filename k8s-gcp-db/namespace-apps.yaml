@@ -1,0 +1,11 @@
+# Namespace de los microservicios de la aplicacion (GCP).
+# Label de inyeccion de Cloud Service Mesh gestionado (revision asm-managed).
+# Se crea aqui porque este folder genera el Secret postgres-credentials-apps
+# dentro de 'apps' (garantiza que el namespace exista antes del Secret).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apps
+  labels:
+    app.kubernetes.io/part-of: apps
+    istio.io/rev: asm-managed

@@ -1,0 +1,25 @@
+# Gateway de entrada (Kubernetes Gateway API) implementado por GKE.
+# No se usa istio-ingressgateway: el mesh gestionado integra el gateway de GKE.
+# Ajustar la clase al tipo de balanceador deseado:
+#   - gke-l7-global-external-managed   (externo global, L7)
+#   - gke-l7-regional-external-managed (externo regional, L7)
+#   - gke-l7-rilb                      (interno regional, L7)
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: apps-gateway
+  namespace: istio-ingress
+  labels:
+    app.kubernetes.io/part-of: apps
+spec:
+  gatewayClassName: gke-l7-global-external-managed
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: apps

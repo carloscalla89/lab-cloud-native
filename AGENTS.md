@@ -50,6 +50,20 @@ Order: `00-namespace` → `k8s-db` → `k8s-sa` → `k8s-apps/<service>` → `is
 Images are `<service>:jvm` with `imagePullPolicy: IfNotPresent`; load into kind
 with `kind load docker-image <image> --name k8s-demos-cluster`.
 
+GCP/GKE manifests are **separate and self-contained** (no root kustomization):
+`csm/` (Cloud Service Mesh + Gateway API), `k8s-gcp-db/`, `k8s-gcp-sa/`,
+`k8s-gcp-apps/`. Apply with `kubectl apply -k <folder>/`; order:
+`k8s-gcp-db` → `k8s-gcp-sa` → `k8s-gcp-apps` → `csm`. Images come from Artifact
+Registry — replace the `PROJECT_ID` placeholder in `k8s-gcp-apps/`.
+`istio/` is kind-only (no GCP overlay).
+
+GCP infra provisioning lives in `gke/` (cluster + Cloud Service Mesh),
+`artifact/` (Artifact Registry + image push) and `scripts-gcp/` (`execute-all`
+to create all resources, `deploy-apps` for the k8s manifests, `delete-all` to
+tear down). Configure `gke/config.env` and `artifact/config.env` (keep
+`PROJECT_ID`/`REGION` in sync). These scripts are run **manually** — do not
+execute them as part of editing.
+
 ## Istio
 
 - Istio **1.31.1** installed (profile `default`, sidecar mode). k8s is 1.36, so
@@ -73,8 +87,8 @@ with `kind load docker-image <image> --name k8s-demos-cluster`.
   On kind the Service is `LoadBalancer` with `EXTERNAL-IP <pending>` and the
   Gateway reports `Programmed=False` (`AddressNotAssigned`); this is expected and
   port-forward still works.
-- Env-specific bits live in `istio/overlays/<env>/` (`kind`, `gcp`). The GKE/CSM
-  overlay only patches `gatewayClassName` (e.g. `gke-l7-global-external-managed`).
+- Env-specific bits live in `istio/overlays/<env>/` (only `kind` today; the GKE/CSM
+  manifests live in the separate `csm/` folder, not under `istio/`).
 - Gotcha: `kubectl port-forward` directly to a service **bypasses** Istio
   mTLS/authorization (localhost is exempt), so it is fine for functional tests
   but does NOT validate policies. To validate, use the gateway or a meshed pod

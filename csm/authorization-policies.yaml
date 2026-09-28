@@ -1,0 +1,66 @@
+# Control de acceso de la malla (RBAC de Istio) para Cloud Service Mesh.
+# - experience: solo el ingress gateway puede llamarlo.
+# - order-service y tracking-service: solo el BFF (experience) puede llamarlos.
+# En todos los casos se permite /q/health/* para no romper los probes de Kubernetes.
+# Requiere que cada workload tenga su propio ServiceAccount (ver k8s-gcp-sa/).
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: experience-allow-gateway
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: experience-order-tracker-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              # TODO(GCP): sustituir por el principal real del ingress gestionado
+              # de GKE/CSM. Con CSM gestionado NO es apps-gateway-istio.
+              # Descubrir en los access logs de Envoy del BFF y fijarlo aqui,
+              # o usar targetRefs con kind: Gateway.
+              - cluster.local/ns/gke-managed-istio/sa/istio-ingressgateway
+    - to:
+        - operation:
+            paths: ["/q/health/*"]
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: order-allow-experience
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: order-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/apps/sa/experience-order-tracker-service
+    - to:
+        - operation:
+            paths: ["/q/health/*"]
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: tracking-allow-experience
+  namespace: apps
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tracking-service
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            principals:
+              - cluster.local/ns/apps/sa/experience-order-tracker-service
+    - to:
+        - operation:
+            paths: ["/q/health/*"]

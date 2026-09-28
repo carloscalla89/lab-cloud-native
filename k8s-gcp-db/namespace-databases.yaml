@@ -1,0 +1,7 @@
+# Namespace de las bases de datos (PostgreSQL).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: databases
+  labels:
+    app.kubernetes.io/part-of: apps

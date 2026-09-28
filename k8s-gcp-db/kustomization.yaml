@@ -1,0 +1,26 @@
+# Base de datos PostgreSQL in-cluster para GCP (mismos nombres que kind).
+# Aplica los namespaces + Postgres + los dos Secret:
+#   kubectl apply -k k8s-gcp-db/
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace-apps.yaml
+  - namespace-databases.yaml
+  - initdb-configmap.yaml
+  - postgres.yaml
+
+# Misma fuente canonica (postgres-credentials.env) -> un Secret por namespace.
+secretGenerator:
+  - name: postgres-credentials
+    namespace: databases
+    envs:
+      - postgres-credentials.env
+  - name: postgres-credentials-apps
+    namespace: apps
+    envs:
+      - postgres-credentials.env
+
+# Sin hash: los consumidores referencian el nombre exacto del Secret.
+generatorOptions:
+  disableNameSuffixHash: true
