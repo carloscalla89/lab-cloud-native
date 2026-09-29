@@ -1,5 +1,5 @@
 <template>
-  <div class="page">
+  <div class="page page-wide">
     <div class="page-header">
       <h1 class="page-title">Dashboard</h1>
       <p class="page-sub">Arquitectura Cloud Native · GDG Lima Meetup</p>
@@ -19,79 +19,71 @@
     <!-- Architecture flow card -->
     <div class="card arch-card">
       <div class="label" style="margin-bottom:16px">Flujo de la arquitectura</div>
-      <div class="arch-grid">
-        <!-- Cliente: centrado, origen del flujo -->
-        <div class="arch-node arch-client arch-cell-span" style="grid-column:1">
-          <div class="arch-icon">💻</div>
-          <div class="arch-name">Cliente / Browser</div>
-          <div class="arch-port">:5000</div>
-          <div class="arch-tag">front (Vite)</div>
+      <div class="arch-flow">
+        <!-- Banda 1: entrada (Cliente -> Gateway -> BFF) -->
+        <div class="arch-band">
+          <div class="arch-node arch-client">
+            <div class="arch-icon">💻</div>
+            <div class="arch-name">Cliente / Browser</div>
+            <div class="arch-port">:5000</div>
+            <div class="arch-tag">front (Vite)</div>
+          </div>
+          <div class="arch-arrow">
+            →
+            <div class="istio-badge" title="El proxy de Vite reenvía /bff al ingress gateway">🔒 proxy</div>
+          </div>
+          <div class="arch-node arch-gw">
+            <div class="arch-icon">🚪</div>
+            <div class="arch-name">Istio Gateway</div>
+            <div class="arch-port">Gateway API · :80</div>
+            <div class="arch-tag">apps-gateway</div>
+          </div>
+          <div class="arch-arrow">
+            →
+            <div class="istio-badge" title="Solo el gateway puede llamar al BFF (experience-allow-gateway)">🔒 allow gateway</div>
+          </div>
+          <div class="arch-node arch-bff">
+            <div class="arch-icon">🌐</div>
+            <div class="arch-name">BFF</div>
+            <div class="arch-port">:8082</div>
+            <div class="arch-tag">experience-order-tracker</div>
+          </div>
         </div>
 
-        <div class="arch-arrow arch-cell-span" style="grid-column:2">
-          →
-          <div class="istio-badge" title="El proxy de Vite reenvía /bff al ingress gateway">🔒 proxy</div>
-        </div>
-
-        <!-- Ingress gateway: entrada única a la malla -->
-        <div class="arch-node arch-gw arch-cell-span" style="grid-column:3">
-          <div class="arch-icon">🚪</div>
-          <div class="arch-name">Istio Gateway</div>
-          <div class="arch-port">Gateway API · :80</div>
-          <div class="arch-tag">apps-gateway</div>
-        </div>
-
-        <div class="arch-arrow arch-cell-span" style="grid-column:4">
-          →
-          <div class="istio-badge" title="Solo el gateway puede llamar al BFF (experience-allow-gateway)">🔒 allow gateway</div>
-        </div>
-
-        <!-- BFF: punto de fan-out hacia ambos servicios -->
-        <div class="arch-node arch-bff arch-cell-span" style="grid-column:5">
-          <div class="arch-icon">🌐</div>
-          <div class="arch-name">BFF</div>
-          <div class="arch-port">:8082</div>
-          <div class="arch-tag">experience-order-tracker</div>
-        </div>
-
-        <!-- Fila superior: BFF → order-service → PostgreSQL -->
-        <div class="arch-diag arch-diag-top" style="grid-column:6;grid-row:1">
-          ↗
-          <div class="istio-badge" title="order-allow-experience: solo el BFF puede llamar a order-service">🔒 allow BFF</div>
-        </div>
-        <div class="arch-node arch-svc" style="grid-column:7;grid-row:1">
-          <div class="arch-icon">📦</div>
-          <div class="arch-name">order-service</div>
-          <div class="arch-port">:8080</div>
-        </div>
-        <div class="arch-arrow" style="grid-column:8;grid-row:1">
-          →
-          <div class="istio-badge" title="Persistencia JDBC hacia PostgreSQL">🗄️ JDBC</div>
-        </div>
-        <div class="arch-node arch-db" style="grid-column:9;grid-row:1">
-          <div class="arch-icon">🗄️</div>
-          <div class="arch-name">PostgreSQL</div>
-          <div class="arch-port">orders DB</div>
-        </div>
-
-        <!-- Fila inferior: BFF → tracking-service → Nominatim -->
-        <div class="arch-diag arch-diag-bottom" style="grid-column:6;grid-row:2">
-          ↘
-          <div class="istio-badge" title="tracking-allow-experience: solo el BFF puede llamar a tracking-service">🔒 allow BFF</div>
-        </div>
-        <div class="arch-node arch-svc" style="grid-column:7;grid-row:2">
-          <div class="arch-icon">📍</div>
-          <div class="arch-name">tracking-service</div>
-          <div class="arch-port">:8081</div>
-        </div>
-        <div class="arch-arrow" style="grid-column:8;grid-row:2">
-          →
-          <div class="istio-badge" title="Reverse geocoding vía HTTPS">🗺️ egress</div>
-        </div>
-        <div class="arch-node arch-ext" style="grid-column:9;grid-row:2">
-          <div class="arch-icon">🗺️</div>
-          <div class="arch-name">Nominatim</div>
-          <div class="arch-port">geocoding</div>
+        <!-- Banda 2: fan-out del BFF hacia los dos servicios -->
+        <div class="arch-band arch-band--services">
+          <div class="arch-branch">
+            <div class="arch-node arch-svc">
+              <div class="arch-icon">📦</div>
+              <div class="arch-name">order-service</div>
+              <div class="arch-port">:8080</div>
+            </div>
+            <div class="arch-arrow">
+              →
+              <div class="istio-badge" title="order-allow-experience: solo el BFF puede llamar a order-service">🔒 allow BFF</div>
+            </div>
+            <div class="arch-node arch-db">
+              <div class="arch-icon">🗄️</div>
+              <div class="arch-name">PostgreSQL</div>
+              <div class="arch-port">orders DB</div>
+            </div>
+          </div>
+          <div class="arch-branch">
+            <div class="arch-node arch-svc">
+              <div class="arch-icon">📍</div>
+              <div class="arch-name">tracking-service</div>
+              <div class="arch-port">:8081</div>
+            </div>
+            <div class="arch-arrow">
+              →
+              <div class="istio-badge" title="tracking-allow-experience: solo el BFF puede llamar a tracking-service">🔒 allow BFF</div>
+            </div>
+            <div class="arch-node arch-ext">
+              <div class="arch-icon">🗺️</div>
+              <div class="arch-name">Nominatim</div>
+              <div class="arch-port">geocoding</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -238,36 +230,31 @@ onMounted(async () => {
 
 <style scoped>
 /* ── Architecture diagram ────────────────────────────────────────────────── */
-/* Flujo de izquierda a derecha: Cliente → Istio Gateway → BFF → {order-service, tracking-service} → {PostgreSQL, Nominatim}.
-   Cliente, Gateway y BFF ocupan las 2 filas (centrados); las flechas diagonales representan
-   el fan-out del BFF hacia cada servicio. */
-.arch-grid {
-  display: grid;
-  grid-template-columns: repeat(9, auto);
-  grid-auto-rows: auto;
-  align-items: center;
-  justify-items: center;
-  column-gap: 10px;
-  row-gap: 22px;
-  overflow-x: auto;
-  padding-bottom: 8px;
+/* Dos bandas que hacen wrap (sin scroll horizontal):
+   Banda 1 (entrada): Cliente → Istio Gateway → BFF.
+   Banda 2 (fan-out): ramas {order-service → PostgreSQL} y {tracking-service → Nominatim}. */
+.arch-flow { display: flex; flex-direction: column; gap: 22px; }
+.arch-band {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: center; gap: 10px;
+}
+.arch-band--services { gap: 16px; }
+.arch-branch {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  padding: 14px 16px 0;
+  border-top: 1px dashed var(--border);
 }
 .arch-arrow {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
   font-size: 20px; color: var(--muted); flex-shrink: 0;
 }
-.arch-diag {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  font-size: 22px; color: var(--muted); flex-shrink: 0;
-}
-.arch-cell-span { grid-row: 1 / 3; align-self: center; }
 .arch-node {
   border: 1px solid var(--border);
   border-radius: var(--r);
   padding: 12px 16px;
   text-align: center;
-  min-width: 130px;
-  flex-shrink: 0;
+  min-width: 0;
+  max-width: 220px;
 }
 .arch-client { border-color: var(--muted); }
 .arch-gw     { border-color: var(--warning); background: rgba(245,158,11,.07); }
@@ -348,6 +335,7 @@ onMounted(async () => {
 .scenario strong { display: block; margin-bottom: 6px; }
 
 /* ── Spacing overrides ───────────────────────────────────────────────────── */
+.page-wide { max-width: none; }
 .card { margin-bottom: 20px; }
 .arch-card { overflow: visible; }
 </style>

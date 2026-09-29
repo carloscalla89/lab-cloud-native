@@ -47,22 +47,26 @@ Apply per folder:
   `kubectl apply -k istio/` no longer exists.
 
 Order: `00-namespace` → `k8s-db` → `k8s-sa` → `k8s-apps/<service>` → `istio`.
-Images are `<service>:jvm` with `imagePullPolicy: IfNotPresent`; load into kind
-with `kind load docker-image <image> --name k8s-demos-cluster`.
+Images are `carlos89/<service>:jvm` (Docker Hub) with `imagePullPolicy: Always`;
+for offline kind, `kind load docker-image carlos89/<service>:jvm --name k8s-demos-cluster`.
 
 GCP/GKE manifests are **separate and self-contained** (no root kustomization):
 `csm/` (Cloud Service Mesh + Gateway API), `k8s-gcp-db/`, `k8s-gcp-sa/`,
 `k8s-gcp-apps/`. Apply with `kubectl apply -k <folder>/`; order:
-`k8s-gcp-db` → `k8s-gcp-sa` → `k8s-gcp-apps` → `csm`. Images come from Artifact
-Registry — replace the `PROJECT_ID` placeholder in `k8s-gcp-apps/`.
+`k8s-gcp-db` → `k8s-gcp-sa` → `k8s-gcp-apps` → `csm`. Images come from Docker Hub
+(`carlos89/<service>:jvm`); the Artifact Registry path (`artifact/`) is optional.
 `istio/` is kind-only (no GCP overlay).
 
 GCP infra provisioning lives in `gke/` (cluster + Cloud Service Mesh),
-`artifact/` (Artifact Registry + image push) and `scripts-gcp/` (`execute-all`
-to create all resources, `deploy-apps` for the k8s manifests, `delete-all` to
-tear down). Configure `gke/config.env` and `artifact/config.env` (keep
-`PROJECT_ID`/`REGION` in sync). These scripts are run **manually** — do not
+`artifact/` (optional: Artifact Registry + image push) and `scripts-gcp/`
+(`execute-all` to create all resources, `deploy-apps` for the k8s manifests,
+`delete-all` to tear down). Configure `gke/config.env` and `artifact/config.env`
+(keep `PROJECT_ID`/`REGION` in sync). These scripts are run **manually** — do not
 execute them as part of editing.
+
+Docker Hub image publishing lives in `dockerhub/` (`login.sh`, `build-push.sh`,
+tag fixed to `jvm`, `linux/amd64`). Also manual; configure `dockerhub/config.env`
+(`DOCKERHUB_USER`).
 
 ## Istio
 

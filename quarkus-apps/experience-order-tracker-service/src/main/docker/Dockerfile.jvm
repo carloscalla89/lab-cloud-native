@@ -1,7 +1,7 @@
 # ======================================================================
 # Imagen JVM para experience-order-tracker-service
 # Construir el artefacto antes con: mvn package
-# Luego:  docker build -f src/main/docker/Dockerfile.jvm -t experience-order-tracker-service:jvm .
+# Luego:  docker build -f src/main/docker/Dockerfile.jvm -t carlos89/experience-order-tracker-service:jvm .
 # ======================================================================
 FROM registry.access.redhat.com/ubi9/openjdk-21-runtime:latest
 

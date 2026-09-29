@@ -1,6 +1,6 @@
 # ======================================================================
 # tracking-service: ACL de geocodificacion + eventos (PostgreSQL db 'tracking').
-# Namespace: apps | Puerto: 8081 | Imagen local: tracking-service:jvm
+# Namespace: apps | Puerto: 8081 | Imagen: Docker Hub (carlos89/tracking-service:jvm)
 # Proveedor de geocodificacion por defecto: nominatim (sin API key).
 # ======================================================================
 apiVersion: apps/v1
@@ -25,8 +25,8 @@ spec:
       serviceAccountName: tracking-service
       containers:
         - name: tracking-service
-          image: tracking-service:jvm
-          imagePullPolicy: IfNotPresent
+          image: carlos89/tracking-service:jvm
+          imagePullPolicy: Always
           ports:
             - containerPort: 8081
           env:

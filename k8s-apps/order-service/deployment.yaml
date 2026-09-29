@@ -1,6 +1,6 @@
 # ======================================================================
 # order-service: gestion de ordenes (PostgreSQL db 'orders').
-# Namespace: apps | Puerto: 8080 | Imagen local: order-service:jvm
+# Namespace: apps | Puerto: 8080 | Imagen: Docker Hub (carlos89/order-service:jvm)
 # ======================================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -24,8 +24,8 @@ spec:
       serviceAccountName: order-service
       containers:
         - name: order-service
-          image: order-service:jvm
-          imagePullPolicy: IfNotPresent
+          image: carlos89/order-service:jvm
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:

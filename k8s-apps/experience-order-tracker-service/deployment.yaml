@@ -1,6 +1,6 @@
 # ======================================================================
 # experience-order-tracker-service: BFF / orquestador (sin base de datos).
-# Namespace: apps | Puerto: 8082 | Imagen local: experience-order-tracker-service:jvm
+# Namespace: apps | Puerto: 8082 | Imagen: Docker Hub (carlos89/experience-order-tracker-service:jvm)
 # Llama a order-service y tracking-service via sus Services internos.
 # ======================================================================
 apiVersion: apps/v1
@@ -25,8 +25,8 @@ spec:
       serviceAccountName: experience-order-tracker-service
       containers:
         - name: experience-order-tracker-service
-          image: experience-order-tracker-service:jvm
-          imagePullPolicy: IfNotPresent
+          image: carlos89/experience-order-tracker-service:jvm
+          imagePullPolicy: Always
           ports:
             - containerPort: 8082
           env:

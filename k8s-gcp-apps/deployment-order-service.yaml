@@ -1,6 +1,6 @@
 # ======================================================================
 # order-service: gestion de ordenes (PostgreSQL db 'orders').
-# Namespace: apps | Puerto: 8080 | Imagen: Artifact Registry (GCP)
+# Namespace: apps | Puerto: 8080 | Imagen: Docker Hub (carlos89/order-service:jvm)
 # ======================================================================
 apiVersion: apps/v1
 kind: Deployment
@@ -24,9 +24,8 @@ spec:
       serviceAccountName: order-service
       containers:
         - name: order-service
-          # TODO(GCP): reemplazar PROJECT_ID por el proyecto real.
-          image: us-central1-docker.pkg.dev/PROJECT_ID/lab-cloudnative/order-service:1.0.0
-          imagePullPolicy: IfNotPresent
+          image: carlos89/order-service:jvm
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
