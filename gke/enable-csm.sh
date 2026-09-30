@@ -4,13 +4,16 @@
 set -euo pipefail
 source "$(dirname "$0")/config.env"
 
+# Ubicacion del cluster (zona si es zonal, region si es regional).
+CLUSTER_LOCATION="${ZONE:-$REGION}"
+
 # 1) Registrar la membership en el fleet.
 if gcloud container fleet memberships describe "$CLUSTER_NAME" \
       --location "$REGION" --project "$PROJECT_ID" >/dev/null 2>&1; then
   echo "Membership '$CLUSTER_NAME' ya registrada en el fleet."
 else
   gcloud container fleet memberships register "$CLUSTER_NAME" \
-    --gke-cluster "${REGION}/${CLUSTER_NAME}" \
+    --gke-cluster "${CLUSTER_LOCATION}/${CLUSTER_NAME}" \
     --location "$REGION" --project "$PROJECT_ID"
 fi
 

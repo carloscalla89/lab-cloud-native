@@ -7,6 +7,9 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 source "$ROOT/gke/config.env"
 source "$ROOT/artifact/config.env"
 
+# Ubicacion del cluster (zona si es zonal, region si es regional).
+if [ -n "${ZONE:-}" ]; then CLUSTER_LOC_ARGS=(--zone "$ZONE"); else CLUSTER_LOC_ARGS=(--region "$REGION"); fi
+
 read -r -p "Esto borra CLUSTER, CSM, REPO e IP en '$PROJECT_ID'. Continuar? [y/N] " ok
 [[ "$ok" =~ ^[yY]$ ]] || { echo "cancelado"; exit 0; }
 
@@ -16,7 +19,7 @@ gcloud compute addresses delete "$GATEWAY_IP_NAME" \
 
 echo "==> Cluster '$CLUSTER_NAME' (arrastra los recursos k8s)"
 gcloud container clusters delete "$CLUSTER_NAME" \
-  --region "$REGION" --project "$PROJECT_ID" --quiet 2>/dev/null || true
+  "${CLUSTER_LOC_ARGS[@]}" --project "$PROJECT_ID" --quiet 2>/dev/null || true
 
 echo "==> Fleet membership / Cloud Service Mesh"
 gcloud container fleet memberships unregister "$CLUSTER_NAME" \

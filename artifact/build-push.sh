@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Compila (mvn package), construye y publica las imagenes de los microservicios.
+# Compila (mvn package) y publica las imagenes directamente en Artifact Registry.
+# Usa `buildx build --push` para exportar DIRECTO al registry, evitando el paso
+# local "unpacking to ..." del containerd image store de Docker Desktop.
 set -euo pipefail
 source "$(dirname "$0")/config.env"
 
@@ -7,13 +9,14 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REGISTRY="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}"
 
 for svc in $SERVICES; do
-  echo "==> $svc"
+  echo "==> $svc -> $REGISTRY/$svc:$TAG"
   ( cd "$ROOT/quarkus-apps/$svc" && mvn -q package )
-  docker build \
+  docker buildx build \
+    --platform "${PLATFORM:-linux/amd64}" \
     -f "$ROOT/quarkus-apps/$svc/src/main/docker/Dockerfile.jvm" \
     -t "$REGISTRY/$svc:$TAG" \
+    --push \
     "$ROOT/quarkus-apps/$svc"
-  docker push "$REGISTRY/$svc:$TAG"
 done
 
 echo "Imagenes publicadas en $REGISTRY (tag $TAG)."
